@@ -1,0 +1,81 @@
+# Announce a published release in Discord.
+#
+# Fires when a release is PUBLISHED (not when a draft or prerelease is
+# created), so a build can be uploaded and tested behind a prerelease without
+# the server being told. Flipping the prerelease off is what announces it.
+#
+# Needs one repo secret: DISCORD_RELEASE_WEBHOOK
+#   Discord -> Server Settings -> Integrations -> Webhooks -> New Webhook,
+#   pick the channel, Copy Webhook URL, then add it under
+#   Settings -> Secrets and variables -> Actions -> New repository secret.
+# Optional repo variable DISCORD_RELEASE_PING, e.g. "@everyone" or "<@&ROLEID>".
+# Without the secret the job no-ops rather than failing, so publishing a
+# release never breaks because Discord is not wired up.
+name: Announce release to Discord
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to announce (e.g. v1.0.4)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve release
+        id: rel
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          gh release view "$TAG" -R "$GITHUB_REPOSITORY" \
+            --json tagName,name,body,url,assets > rel.json
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Post to Discord
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_RELEASE_WEBHOOK }}
+          PING: ${{ vars.DISCORD_RELEASE_PING }}
+          TAG: ${{ steps.rel.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ -z "${WEBHOOK:-}" ]; then
+            echo "DISCORD_RELEASE_WEBHOOK not set - skipping announcement."
+            exit 0
+          fi
+          TITLE=$(jq -r '.name // .tagName' rel.json)
+          URL=$(jq -r '.url' rel.json)
+          EXE=$(jq -r '[.assets[] | select(.name|endswith(".exe"))][0].url // empty' rel.json)
+          SIZE=$(jq -r '[.assets[] | select(.name|endswith(".exe"))][0].size // 0' rel.json)
+          MB=$(( SIZE / 1000000 ))
+          BODY=$(jq -r '.body // ""' rel.json | head -c 3200)
+          DESC="$BODY"
+          if [ -n "$EXE" ]; then
+            TAIL=$(printf '\n\n**[Download %s (%s MB)](%s)**\n\nAlready running Netz Visionz? Just open it - it offers the update itself and installs it when you accept.' "$TAG" "$MB" "$EXE")
+            DESC="${DESC}${TAIL}"
+          fi
+          jq -n \
+            --arg content "${PING:-}" \
+            --arg title "$TITLE" \
+            --arg url "$URL" \
+            --arg desc "$DESC" \
+            '{content: $content,
+              allowed_mentions: {parse: ["everyone", "roles"]},
+              embeds: [{title: $title, url: $url, description: $desc, color: 7419391}]}' \
+            > payload.json
+          code=$(curl -sS -o resp.txt -w '%{http_code}' \
+            -X POST -H 'Content-Type: application/json' \
+            --data @payload.json "$WEBHOOK")
+          echo "discord HTTP $code"
+          if [ "$code" != "204" ] && [ "$code" != "200" ]; then
+            echo "--- response ---"; cat resp.txt; exit 1
+          fi
+          echo "Announced $TAG in Discord."
