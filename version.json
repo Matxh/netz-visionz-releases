@@ -1,7 +1,7 @@
 {
-  "version": "1.0.9",
-  "url": "https://github.com/Matxh/netz-visionz-releases/releases/download/v1.0.9/NetzVisionz.exe",
-  "notes": "Diagnostic update: adds optional controller-input timing logging (off by default, no gameplay change) to help find the Remote Play tempo-miss issue. No shooting, detection, capture or GPC changes.",
+  "version": "1.0.10",
+  "url": "https://github.com/Matxh/netz-visionz-releases/releases/download/v1.0.10/NetzVisionz.exe",
+  "notes": "New: read the shot meter off your capture card while using Remote Play - set the source to Capture Card and the CV times off the real-time card (no stream delay) while Remote Play carries only the controller. Best accuracy for Remote Play. Plus a one-click support-logging toggle on the Remote Play page.",
   "required": false,
-  "gpc_url": "https://github.com/Matxh/netz-visionz-releases/releases/download/v1.0.9/NetzTitan.gpc"
+  "gpc_url": "https://github.com/Matxh/netz-visionz-releases/releases/download/v1.0.10/NetzTitan.gpc"
 }
