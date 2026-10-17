@@ -1,7 +1,7 @@
 {
-  "version": "1.0.12",
-  "url": "https://github.com/Matxh/netz-visionz-releases/releases/download/v1.0.12/NetzVisionz.exe",
-  "notes": "Remote Play: read the meter off your capture card while Remote Play carries the controller (best accuracy). New Remote Play lead + prediction tuning on the Shooting page to compensate the stream's delay and shot-moment stutter (off by default, stream-only). Turn on GPU decoding + 720p for the smoothest stream. Capture-card path unchanged.",
+  "version": "1.0.13",
+  "url": "https://github.com/Matxh/netz-visionz-releases/releases/download/v1.0.13/NetzVisionz.exe",
+  "notes": "Fullscreen no longer lags the shot or drops Remote Play (GPU now handles fullscreen scaling). Capture-card + Remote Play lates fixed: the Remote Play lead now applies when your controller runs through Remote Play even with a capture-card video source. Plus a startup/stability fix.",
   "required": false,
-  "gpc_url": "https://github.com/Matxh/netz-visionz-releases/releases/download/v1.0.12/NetzTitan.gpc"
+  "gpc_url": "https://github.com/Matxh/netz-visionz-releases/releases/download/v1.0.13/NetzTitan.gpc"
 }
